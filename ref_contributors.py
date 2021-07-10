@@ -1,9 +1,21 @@
-import osmapi
+from OSMPythonTools.overpass import Overpass
 import re
 import sys
+TIMEOUT = 600
+
+def query(id):
+  return f'''
+timeline(relation,{id});
+foreach(
+  retro(u(t["created"]))(
+    relation({id});
+    out meta;
+  );
+);
+'''
 
 def main():
-  api = osmapi.OsmApi()
+  overpass = Overpass()
 
   regex = re.compile(r"(\d+)")
 
@@ -16,13 +28,13 @@ def main():
         m = regex.search(l)
         if m:
           r = m.group(0)
-          rhist = api.RelationHistory(r)
+          rhist = overpass.query(query(r), timeout=TIMEOUT)
           lowest = sys.maxsize
           creator = None
 
-          for k, v in rhist.items():
-            user = v["user"]
-            version = v["version"]
+          for v in rhist.elements():
+            user = v.user()
+            version = v.version()
             
             if version < lowest:
               lowest = version
@@ -32,7 +44,6 @@ def main():
               users[user] = users[user] + 1
             else:
               users[user] = 1
-
 
           if not creator:
             print("Relation %d does not have a creator? Wat?" % r)
