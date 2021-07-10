@@ -6,12 +6,18 @@ TIMEOUT = 600
 def query(id):
   return f'''
 timeline(relation,{id});
-foreach(
-  retro(u(t["created"]))(
-    relation({id});
-    out meta;
-  );
-);
+for (t["created"])\u007b
+  retro(_.val)
+  \u007b
+    rel({id});
+    make stat version=u(version()),
+      timestamp=u(timestamp()),
+      user=u(user()),
+      changeset=u(changeset()),
+      ;
+    out;
+  \u007d
+\u007d
 '''
 
 def main():
@@ -33,8 +39,8 @@ def main():
           creator = None
 
           for v in rhist.elements():
-            user = v.user()
-            version = v.version()
+            user = v._json["tags"]["user"]
+            version = int(v._json["tags"]["version"])
             
             if version < lowest:
               lowest = version
