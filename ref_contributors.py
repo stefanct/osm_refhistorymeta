@@ -1,7 +1,9 @@
 from OSMPythonTools.overpass import Overpass
 import logging
+import os
 import re
 import sys
+import urllib
 TIMEOUT = 600
 
 def query(id):
@@ -31,13 +33,44 @@ def main():
   users = {}
   creators = {}
 
-  with open("refs.txt") as fp:
+  try:
+    with open("refs.txt") as fp:
       Lines = fp.readlines()
       for l in Lines:
         m = regex.search(l)
         if m:
           r = m.group(0)
-          rhist = overpass.query(query(r), timeout=TIMEOUT)
+          print(f"Relation {r}")
+          cont=2
+          while(cont > 0):
+            try:
+              rhist = overpass.query(query(r), timeout=TIMEOUT)
+            except Exception as e:
+              # We won't get anything else than generic Exception instances here :(
+              # See https://github.com/mocnik-science/osm-python-tools/issues/43
+              if (e.args[0] and e.args[0].startswith('[overpass] error in result (cache')):
+                m = re.search('\((.*)\)', e.args[0])
+                cachefile = m.group(1)
+                logger.error(f"Cache file {cachefile} is broken, removing")
+                os.remove(cachefile)
+                cont -= 1
+                continue # retry once
+
+              if (hasattr(e, "args") and e.args[0].startswith("[overpass] could not fetch or interpret status of the endpoint")):
+                logger.error("Are you online? Something is really broken...")
+                raise e
+
+              if (not hasattr(e, "args") or e.args[0].startswith("The requested data could not be downloaded.  ")):
+                raise e
+
+              logger.error(f'Could not fetch metadata for relation {r} (HTTPError), continuing with next relation.')
+              cont=0
+              continue
+            break
+          else:
+            # We get here on HTTP errors (i.e., timeouts) and persisting cache problems, try next relation
+            continue
+
           lowest = sys.maxsize
           creator = None
 
@@ -61,6 +94,9 @@ def main():
               creators[creator] = creators[creator] + 1
             else:
               creators[creator] = 1
+  except Exception as e:
+    logger.error(e)
+    sys.exit(0)
 
   def print_numdict_reverse(d, topn=None, minval=1):
     for i,k in enumerate(sorted(d, key=d.get, reverse=True)):
