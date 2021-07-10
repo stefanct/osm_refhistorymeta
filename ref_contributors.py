@@ -1,4 +1,5 @@
 from OSMPythonTools.overpass import Overpass
+import logging
 import re
 import sys
 TIMEOUT = 600
@@ -22,6 +23,8 @@ for (t["created"])\u007b
 
 def main():
   overpass = Overpass()
+  logger = logging.getLogger('OSMPythonTools')
+  logger.setLevel(logging.ERROR)
 
   regex = re.compile(r"(\d+)")
 
