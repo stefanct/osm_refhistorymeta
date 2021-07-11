@@ -59,18 +59,22 @@ def main():
           r = m.group(0)
           print(f"Relation {r}")
           cont=2
+          cur = None
           while(cont > 0):
             try:
-              cur = overpass.query(query_cur_meta(r), timeout=QUERY_TIMEOUT)
-              cur_version = int(cur._json["elements"][0]["tags"]["version"])
-              cur_waycount = int(cur._json["elements"][0]["tags"]["waycount"])
-              print(f'  cur version {cur_version}')
-              print(f'  #ways {cur_waycount}')
+              cur_version = None
+              cur_waycount = 0
+              if not cur:
+                cur = overpass.query(query_cur_meta(r), timeout=QUERY_TIMEOUT)
+                cur_version = int(cur._json["elements"][0]["tags"]["version"])
+                cur_waycount = int(cur._json["elements"][0]["tags"]["waycount"])
+                print(f'  cur version {cur_version}')
+                print(f'  #ways {cur_waycount}')
 
-              if (pow(cur_version, 1.5) * cur_waycount > MAX_WAY_VERSION_PRODUCT):
-                logger.error(f"Skipping relation {r} because it's too big")
-                cont = 0
-                continue
+                if (pow(cur_version, 1.5) * cur_waycount > MAX_WAY_VERSION_PRODUCT):
+                  logger.error(f"Skipping relation {r} because it's too big")
+                  cont = 0
+                  continue
 
               rhist = overpass.query(query_hist_meta(r), timeout=QUERY_TIMEOUT)
             except Exception as e:
