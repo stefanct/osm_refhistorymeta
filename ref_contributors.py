@@ -3,9 +3,11 @@ import logging
 import os
 import re
 import sys
+import time
 import urllib
 
 QUERY_TIMEOUT = 3*60 # in seconds
+TOO_MANY_REQUESTS_WAIT = 2*60 # in seconds
 MAX_WAY_VERSION_PRODUCT = QUERY_TIMEOUT*16000 # skip relations having more than this versions^1.5 × ways
 
 def query_cur_meta(id):
@@ -81,6 +83,12 @@ def main():
                 os.remove(cachefile)
                 cont -= 1
                 continue # retry once
+
+              if (hasattr(e, "args") and e.args[0].startswith("The requested data could not be downloaded. HTTP Error 429: Too Many Requests")):
+                logger.error("Got 429: Too Many Requests, waiting a bit and retrying")
+                time.sleep(TOO_MANY_REQUESTS_WAIT)
+                cont=1
+                continue
 
               if (hasattr(e, "args") and e.args[0].startswith("[overpass] could not fetch or interpret status of the endpoint")):
                 logger.error("Are you online? Something is really broken...")
