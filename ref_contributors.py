@@ -4,9 +4,24 @@ import os
 import re
 import sys
 import urllib
-TIMEOUT = 600
 
-def query(id):
+QUERY_TIMEOUT = 3*60 # in seconds
+MAX_WAY_VERSION_PRODUCT = QUERY_TIMEOUT*16000 # skip relations having more than this versions^1.5 × ways
+
+def query_cur_meta(id):
+  return f'''
+rel({id})->.r;
+(way(r.r);)->.ways;
+
+make stat version=r.u(version()),
+timestamp=r.u(timestamp()),
+user=r.u(user()),
+changeset=r.u(changeset()),
+waycount=ways.count(ways);
+out;
+'''
+
+def query_hist_meta(id):
   return f'''
 timeline(relation,{id});
 for (t["created"])\u007b
@@ -44,7 +59,18 @@ def main():
           cont=2
           while(cont > 0):
             try:
-              rhist = overpass.query(query(r), timeout=TIMEOUT)
+              cur = overpass.query(query_cur_meta(r), timeout=QUERY_TIMEOUT)
+              cur_version = int(cur._json["elements"][0]["tags"]["version"])
+              cur_waycount = int(cur._json["elements"][0]["tags"]["waycount"])
+              print(f'  cur version {cur_version}')
+              print(f'  #ways {cur_waycount}')
+
+              if (pow(cur_version, 1.5) * cur_waycount > MAX_WAY_VERSION_PRODUCT):
+                logger.error(f"Skipping relation {r} because it's too big")
+                cont = 0
+                continue
+
+              rhist = overpass.query(query_hist_meta(r), timeout=QUERY_TIMEOUT)
             except Exception as e:
               # We won't get anything else than generic Exception instances here :(
               # See https://github.com/mocnik-science/osm-python-tools/issues/43
