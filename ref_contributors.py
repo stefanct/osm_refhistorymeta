@@ -109,6 +109,9 @@ def main():
           creator = None
 
           for v in rhist.elements():
+            if (not v._json or not v._json["tags"] or not v._json["tags"]["version"]):
+              logger.error(f"There is something wrong with one of the versions of relation {r}, ignoring")
+              continue
             user = v._json["tags"]["user"]
             version = int(v._json["tags"]["version"])
             
