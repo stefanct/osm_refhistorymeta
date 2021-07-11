@@ -147,27 +147,36 @@ def main():
   topn = 20
   #  minval = 3
 
-  print("Users:")
-  print_numdict_reverse(users)
+  #  print("Users:")
+  #  print_numdict_reverse(users)
 
-  print("Users (top %d):" % topn)
+  #  print()
+
+  print("Users (top %d out of %d):" % (topn, len(users)))
   print_numdict_reverse(users, topn)
+
+  #  print()
 
   #  print("Users (min edits: %d):" % minval)
   #  print_numdict_reverse(users, minval = minval)
 
+  print()
 
   topn = 20
-  #  minval = 2
+  minval = 2
 
-  print("Creators:")
-  print_numdict_reverse(creators)
+  #  print("Creators:")
+  #  print_numdict_reverse(creators)
 
-  print("Creators (top %d):" % topn)
+  #  print()
+
+  print("Creators (top %d out of %d):" % (topn, len(creators)))
   print_numdict_reverse(creators, topn)
 
-  #  print("Creators (min creates: %d):" % minval)
-  #  print_numdict_reverse(creators, minval = minval)
+  print()
+
+  print("Creators (min creates: %d):" % minval)
+  print_numdict_reverse(creators, minval = minval)
 
 if __name__ == '__main__':
     main()
