@@ -81,12 +81,9 @@ def main():
               # We won't get anything else than generic Exception instances here :(
               # See https://github.com/mocnik-science/osm-python-tools/issues/43
               if (e.args[0] and e.args[0].startswith('[overpass] error in result (cache')):
-                m = re.search('\((.*)\)', e.args[0])
-                cachefile = m.group(1)
-                logger.error(f"Cache file {cachefile} is broken, removing")
-                os.remove(cachefile)
+                logger.error(f"Download {r} timed out.")
                 cont -= 1
-                continue # retry once
+                continue # retry
 
               if (hasattr(e, "args") and e.args[0].startswith("The requested data could not be downloaded. HTTP Error 429: Too Many Requests")):
                 logger.error("Got 429: Too Many Requests, waiting a bit and retrying")
