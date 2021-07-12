@@ -10,6 +10,9 @@ QUERY_TIMEOUT = 3*60 # in seconds
 TOO_MANY_REQUESTS_WAIT = 2*60 # in seconds
 MAX_WAY_VERSION_PRODUCT = QUERY_TIMEOUT*16000 # skip relations having more than this versions^1.5 × ways
 
+# Python is stupid (re. pipes)
+sys.stdout.reconfigure(line_buffering=True)
+
 def query_cur_meta(id):
   return f'''
 rel({id})->.r;
