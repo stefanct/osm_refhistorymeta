@@ -9,6 +9,7 @@ import urllib
 QUERY_TIMEOUT = 3*60 # in seconds
 TOO_MANY_REQUESTS_WAIT = 2*60 # in seconds
 MAX_WAY_VERSION_PRODUCT = QUERY_TIMEOUT*16000 # skip relations having more than this versions^1.5 × ways
+RETRIES=2
 
 # Python is stupid (re. pipes)
 sys.stdout.reconfigure(line_buffering=True)
@@ -61,7 +62,7 @@ def main():
         if m:
           r = m.group(0)
           print(f"Relation {r}")
-          cont=2
+          cont=RETRIES
           cur = None
           while(cont > 0):
             try:
@@ -91,7 +92,7 @@ def main():
               if (hasattr(e, "args") and e.args[0].startswith("The requested data could not be downloaded. HTTP Error 429: Too Many Requests")):
                 logger.error("Got 429: Too Many Requests, waiting a bit and retrying")
                 time.sleep(TOO_MANY_REQUESTS_WAIT)
-                cont=1
+                cont=RETRIES
                 continue
 
               if (hasattr(e, "args") and e.args[0].startswith("[overpass] could not fetch or interpret status of the endpoint")):
